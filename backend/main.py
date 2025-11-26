@@ -79,7 +79,7 @@ def init_db():
             potenza_kw,
             energia_kwh,
             massa,
-            tipo_alimentazione,
+            tipo_alimentazione
         )
         VALUES (?, ?, ?, ?, ?, ?)
         ''',

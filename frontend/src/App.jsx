@@ -45,8 +45,10 @@ export default function App() {
 
     const createChart = (key) => {
       const values = timeline.map((point) => Number(point[key]) || 0)
-      const max = Math.max(...values, 1)
-      const min = Math.min(...values, 0)
+      const rawMax = Math.max(...values, 1)
+      // Arrotonda il massimo verso l'alto per avere un asse Y più leggibile
+      const max = Math.ceil((rawMax * 1.1) / 10) * 10
+      const min = 0
       const range = Math.max(max - min, 1)
       const points = timeline.map((point, index) => {
         const x =
@@ -88,6 +90,9 @@ export default function App() {
   if (!train) {
     return <div className="loading">Recupero dati del treno...</div>
   }
+
+  const TOOLTIP_WIDTH = 120
+  const TOOLTIP_HEIGHT = 34
 
   const progress = Math.min((train.velocita / 350) * 100, 100)
   const notes = (train.altre_metriche || '')
@@ -166,6 +171,22 @@ export default function App() {
 
         {CHART_METRICS.map((metric) => {
           const geometry = chartGeometry[metric.key]
+          const activeHover =
+            hover && hover.metric === metric.key && geometry
+              ? (() => {
+                  const baseX = hover.point.x
+                  const baseY = hover.point.y
+                  const minX = geometry.padding.left + TOOLTIP_WIDTH / 2
+                  const maxX =
+                    geometry.width - geometry.padding.right - TOOLTIP_WIDTH / 2
+                  const centerX = Math.min(Math.max(baseX, minX), maxX)
+                  const topY = Math.max(
+                    baseY - 46,
+                    geometry.padding.top + 4,
+                  )
+                  return { ...hover, centerX, topY }
+                })()
+              : null
           return (
             <article className="card span-2 chart-card" key={metric.key}>
               <h3>
@@ -234,26 +255,28 @@ export default function App() {
                     {hover && hover.metric === metric.key && (
                       <g className="chart-tooltip">
                         <rect
-                          x={hover.point.x - 60}
-                          y={hover.point.y - 46}
+                          x={activeHover.centerX - TOOLTIP_WIDTH / 2}
+                          y={activeHover.topY}
                           rx="6"
                           ry="6"
-                          width="120"
-                          height="34"
+                          width={TOOLTIP_WIDTH}
+                          height={TOOLTIP_HEIGHT}
                         />
                         <text
-                          x={hover.point.x}
-                          y={hover.point.y - 32}
+                          x={activeHover.centerX}
+                          y={activeHover.topY + 14}
                           className="chart-tooltip-title"
                         >
-                          {hover.label} {hover.point.value.toFixed(0)} {hover.unit}
+                          {activeHover.label}{' '}
+                          {activeHover.point.value.toFixed(0)}{' '}
+                          {activeHover.unit}
                         </text>
                         <text
-                          x={hover.point.x}
-                          y={hover.point.y - 18}
+                          x={activeHover.centerX}
+                          y={activeHover.topY + 28}
                           className="chart-tooltip-sub"
                         >
-                          {hover.point.timestamp}
+                          {activeHover.point.timestamp}
                         </text>
                       </g>
                     )}

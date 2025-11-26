@@ -131,13 +131,11 @@ h1 {
 
 .chart-wrapper {
   margin-top: 12px;
-  overflow-x: auto;
-  padding-bottom: 8px;
+  overflow: visible;
 }
 
 .chart-card svg {
   width: 100%;
-  min-width: 680px;
   overflow: visible;
 }
 

@@ -67,6 +67,12 @@ h1 {
   grid-column: span 2;
 }
 
+.span-2x2 {
+  /* poco più larga di due card standard */
+  grid-column: span 2;
+  grid-row: span 2;
+}
+
 .value {
   font-size: 32px;
   font-weight: 700;
@@ -89,8 +95,134 @@ h1 {
 
 .progress div {
   height: 100%;
-  background: linear-gradient(90deg, #ff7a18, #af002d 70%);
+  background: linear-gradient(90deg, #18ffe0, #18ffe0 70%);
   transition: width 0.5s ease;
+}
+
+.train-hero-card {
+  position: relative;
+  overflow: hidden;
+  background-image: url('/treno.png');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center center;
+  display: flex;
+  align-items: stretch;
+  min-height: 360px;
+  max-width: 720px;
+  width: 100%;
+  justify-self: start;
+}
+
+.train-hero-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 18px;
+  max-width: 55%;
+  border-radius: 12px;
+}
+
+.train-speed-widget {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  margin-top: -8px;
+}
+
+.train-speed-ring {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.speed-ring-bg {
+  fill: transparent;
+  stroke: rgba(255, 255, 255, 0.18);
+  stroke-width: 8;
+}
+
+.speed-ring-fg {
+  fill: transparent;
+  stroke: #18ffe0;
+  stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.5s ease;
+}
+
+.train-speed-value {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.train-speed-value .label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #8fa0c4;
+}
+
+.train-speed-value .number {
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.train-speed-value .unit {
+  font-size: 12px;
+  color: #8fa0c4;
+}
+
+.train-hero-metrics {
+  position: absolute;
+  z-index: 1;
+  left: 18px;
+  right: 18px;
+  bottom: 18px;
+  display: flex;
+  gap: 16px;
+  background: radial-gradient(
+    circle at bottom left,
+    rgba(5, 8, 15, 0.9),
+    rgba(5, 8, 15, 0.55) 60%,
+    transparent 100%
+  );
+  padding: 6px 8px;
+  border-radius: 12px;
+}
+
+.train-hero-metrics .metric {
+  min-width: 120px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(5, 8, 15, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.train-hero-metrics .metric .label {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #8fa0c4;
+}
+
+.train-hero-metrics .metric .number {
+  display: block;
+  margin-top: 4px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.train-hero-metrics .metric .unit {
+  font-size: 11px;
+  margin-left: 4px;
+  color: #8fa0c4;
 }
 
 .metrics {
@@ -127,6 +259,34 @@ h1 {
 
 .chart-card {
   background: rgba(255, 255, 255, 0.06);
+}
+
+.chart-tabs {
+  display: inline-flex;
+  gap: 8px;
+  padding: 4px;
+  background: rgba(5, 8, 15, 0.7);
+  border-radius: 999px;
+  margin-bottom: 12px;
+}
+
+.chart-tab {
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: transparent;
+  color: #8fa0c4;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.chart-tab--active {
+  background: #18ffe0;
+  color: #05080f;
 }
 
 .chart-wrapper {
@@ -244,7 +404,9 @@ h1 {
 
 .type-chip {
   background: rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom-width: 3px;
   border-radius: 12px;
   padding: 10px 14px;
   min-width: 120px;
@@ -262,6 +424,40 @@ h1 {
   display: block;
   margin-top: 4px;
   font-size: 15px;
+}
+
+.mass-card {
+  width: 74%;
+  justify-self: end;
+  min-height: 360px; /* stessa altezza minima della sezione immagine */
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 800px) {
+  .mass-card {
+    /* allinea sotto la terza card (Energia consumata) e alta come il blocco immagine */
+    grid-column: 3;
+    grid-row: span 2;
+  }
+}
+
+.mass-notes-title {
+  margin-top: 16px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #8fa0c4;
+}
+
+.mass-notes-list {
+  max-height: 140px;
+  overflow-y: auto;
+}
+
+.mass-notes-block {
+  margin-top: auto;
 }
 
 .loading {

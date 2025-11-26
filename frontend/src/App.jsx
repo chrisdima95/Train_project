@@ -8,10 +8,25 @@ const CHART_METRICS = [
   { key: 'massa', label: 'Massa', unit: 't', color: '#9b59b6' },
 ]
 
+const getPowerColor = (tipo) => {
+  const value = (tipo || '').toLowerCase()
+  if (value.includes('25kv')) return '#3498db' // blu
+  if (value.includes('3kv')) return '#ff7a18' // arancione
+  if (value.includes('1.5kv') || value.includes('1,5kv')) return '#e74c3c' // rosso
+  return '#8fa0c4'
+}
+
 export default function App() {
   const [train, setTrain] = useState(null)
   const [error, setError] = useState('')
   const [hover, setHover] = useState(null)
+  const [animatedValues, setAnimatedValues] = useState({
+    velocita: 0,
+    potenza_kw: 0,
+    energia_kwh: 0,
+  })
+  const [hasAnimatedOnce, setHasAnimatedOnce] = useState(false)
+  const [selectedMetric, setSelectedMetric] = useState('velocita')
 
   const fetchData = useCallback(async () => {
     try {
@@ -31,6 +46,46 @@ export default function App() {
     const intervalId = setInterval(fetchData, 5000)
     return () => clearInterval(intervalId)
   }, [fetchData])
+
+  useEffect(() => {
+    if (!train) return
+
+    // Se l'animazione iniziale è già avvenuta,
+    // aggiorniamo solo i valori senza effetto contatore.
+    if (hasAnimatedOnce) {
+      setAnimatedValues({
+        velocita: train.velocita,
+        potenza_kw: train.potenza_kw,
+        energia_kwh: train.energia_kwh,
+      })
+      return
+    }
+
+    const duration = 900
+    const startTime = performance.now()
+    let frameId
+
+    const animate = (now) => {
+      const elapsed = now - startTime
+      const t = Math.min(elapsed / duration, 1)
+      const eased = 1 - Math.pow(1 - t, 3)
+
+      setAnimatedValues({
+        velocita: Math.round(train.velocita * eased),
+        potenza_kw: Math.round(train.potenza_kw * eased),
+        energia_kwh: Math.round(train.energia_kwh * eased),
+      })
+
+      if (t < 1) {
+        frameId = requestAnimationFrame(animate)
+      } else {
+        setHasAnimatedOnce(true)
+      }
+    }
+
+    frameId = requestAnimationFrame(animate)
+    return () => cancelAnimationFrame(frameId)
+  }, [train, hasAnimatedOnce])
 
   const timeline = train?.timeline || []
   const route = train?.route || []
@@ -118,7 +173,7 @@ export default function App() {
       </header>
 
       <section className="grid">
-        <article className="card span-2">
+        <article className="card">
           <h3>Velocità attuale</h3>
           <p className="value">
             {train.velocita}
@@ -145,158 +200,252 @@ export default function App() {
           </p>
         </article>
 
-        <article className="card">
+        <article
+          className="card span-2x2 train-hero-card"
+          aria-label="Immagine del treno ad alta velocità con dati principali"
+        >
+          <div className="train-hero-content">
+            <div className="train-speed-widget">
+              <svg
+                className="train-speed-ring"
+                viewBox="0 0 120 120"
+                aria-hidden="true"
+              >
+                <circle
+                  className="speed-ring-bg"
+                  cx="60"
+                  cy="60"
+                  r="44"
+                />
+                <circle
+                  className="speed-ring-fg"
+                  cx="60"
+                  cy="60"
+                  r="44"
+                  style={{
+                    strokeDasharray: 2 * Math.PI * 44,
+                    strokeDashoffset:
+                      ((100 - progress) / 100) * (2 * Math.PI * 44),
+                  }}
+                />
+              </svg>
+              <div className="train-speed-value">
+                <span className="label">Velocità</span>
+                <span className="number">{animatedValues.velocita}</span>
+                <span className="unit">km/h</span>
+              </div>
+            </div>
+
+            <div className="train-hero-metrics">
+              <div className="metric">
+                <span className="label">Potenza</span>
+                <span className="number">{animatedValues.potenza_kw}</span>
+                <span className="unit">kW</span>
+              </div>
+              <div className="metric">
+                <span className="label">Energia consumata</span>
+                <span className="number">{animatedValues.energia_kwh}</span>
+                <span className="unit">kWh</span>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article className="card mass-card">
           <h3>Massa complessiva</h3>
           <p className="value">
             {train.massa}
             <span>t</span>
           </p>
+
+          <div className="mass-notes-block">
+            <h4 className="mass-notes-title">Note tecniche</h4>
+            {notes.length ? (
+              <ul className="metrics-list mass-notes-list">
+                {notes.map((item) => (
+                  <li key={item.label}>
+                    <span>{item.label}</span>
+                    <strong>{item.value}</strong>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="metrics">Nessuna nota disponibile</p>
+            )}
+          </div>
         </article>
 
-        <article className="card span-2">
-          <h3>Note tecniche</h3>
-          {notes.length ? (
-            <ul className="metrics-list">
-              {notes.map((item) => (
-                <li key={item.label}>
-                  <span>{item.label}</span>
-                  <strong>{item.value}</strong>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="metrics">Nessuna nota disponibile</p>
-          )}
-        </article>
+        <article className="card span-2 chart-card">
+          <div className="chart-tabs">
+            {CHART_METRICS.map((metric) => (
+              <button
+                key={metric.key}
+                type="button"
+                className={`chart-tab ${
+                  selectedMetric === metric.key ? 'chart-tab--active' : ''
+                }`}
+                onClick={() => {
+                  setSelectedMetric(metric.key)
+                  setHover(null)
+                }}
+              >
+                {metric.label}
+              </button>
+            ))}
+          </div>
 
-        {CHART_METRICS.map((metric) => {
-          const geometry = chartGeometry[metric.key]
-          const activeHover =
-            hover && hover.metric === metric.key && geometry
-              ? (() => {
-                  const baseX = hover.point.x
-                  const baseY = hover.point.y
-                  const minX = geometry.padding.left + TOOLTIP_WIDTH / 2
-                  const maxX =
-                    geometry.width - geometry.padding.right - TOOLTIP_WIDTH / 2
-                  const centerX = Math.min(Math.max(baseX, minX), maxX)
-                  const topY = Math.max(
-                    baseY - 46,
-                    geometry.padding.top + 4,
-                  )
-                  return { ...hover, centerX, topY }
-                })()
-              : null
-          return (
-            <article className="card span-2 chart-card" key={metric.key}>
-              <h3>
-                Andamento {metric.label.toLowerCase()} ({metric.unit})
-              </h3>
-              {timeline.length && geometry ? (
-                <div className="chart-wrapper">
-                  <svg
-                    viewBox={`0 0 ${geometry.width} ${geometry.height}`}
-                    role="img"
-                  >
-                    <line
-                      x1={geometry.padding.left}
-                      y1={geometry.padding.top}
-                      x2={geometry.padding.left}
-                      y2={geometry.height - geometry.padding.bottom}
-                      className="chart-axis"
-                    />
-                    <line
-                      x1={geometry.padding.left}
-                      y1={geometry.height - geometry.padding.bottom}
-                      x2={geometry.width - geometry.padding.right}
-                      y2={geometry.height - geometry.padding.bottom}
-                      className="chart-axis"
-                    />
-                    <text
-                      x={geometry.padding.left - 10}
-                      y={geometry.padding.top + 4}
-                      className="chart-label axis-label"
+          {(() => {
+            const metric = CHART_METRICS.find(
+              (m) => m.key === selectedMetric,
+            )
+            const geometry = metric ? chartGeometry[metric.key] : null
+            const activeHover =
+              hover && hover.metric === selectedMetric && geometry
+                ? (() => {
+                    const baseX = hover.point.x
+                    const baseY = hover.point.y
+                    const minX = geometry.padding.left + TOOLTIP_WIDTH / 2
+                    const maxX =
+                      geometry.width - geometry.padding.right - TOOLTIP_WIDTH / 2
+                    const centerX = Math.min(Math.max(baseX, minX), maxX)
+                    const topY = Math.max(
+                      baseY - 46,
+                      geometry.padding.top + 4,
+                    )
+                    return { ...hover, centerX, topY }
+                  })()
+                : null
+
+            if (!metric) {
+              return null
+            }
+
+            return (
+              <>
+                <h3>
+                  Andamento {metric.label.toLowerCase()} ({metric.unit})
+                </h3>
+                {timeline.length && geometry ? (
+                  <div className="chart-wrapper">
+                    <svg
+                      viewBox={`0 0 ${geometry.width} ${geometry.height}`}
+                      role="img"
                     >
-                      {geometry.max.toFixed(0)} {metric.unit}
-                    </text>
-                    <text
-                      x={geometry.padding.left - 10}
-                      y={geometry.height - geometry.padding.bottom}
-                      className="chart-label axis-label"
-                    >
-                      {geometry.min.toFixed(0)} {metric.unit}
-                    </text>
-                    <path
-                      d={geometry.path}
-                      style={{ stroke: metric.color }}
-                      className="chart-line"
-                    />
-                    {geometry.points.map((point) => (
-                      <g key={`${metric.key}-${point.timestamp}`}>
-                        <circle
-                          cx={point.x}
-                          cy={point.y}
-                          r="4"
-                          style={{ fill: metric.color }}
-                          onMouseEnter={() =>
-                            setHover({ metric: metric.key, point, unit: metric.unit, label: metric.label })
-                          }
-                          onMouseLeave={() => setHover(null)}
-                        />
-                        <text
-                          x={point.x}
-                          y={geometry.height - geometry.padding.bottom + 16}
-                          className="chart-label"
-                        >
-                          {point.timestamp}
-                        </text>
-                      </g>
-                    ))}
-                    {hover && hover.metric === metric.key && (
-                      <g className="chart-tooltip">
-                        <rect
-                          x={activeHover.centerX - TOOLTIP_WIDTH / 2}
-                          y={activeHover.topY}
-                          rx="6"
-                          ry="6"
-                          width={TOOLTIP_WIDTH}
-                          height={TOOLTIP_HEIGHT}
-                        />
-                        <text
-                          x={activeHover.centerX}
-                          y={activeHover.topY + 14}
-                          className="chart-tooltip-title"
-                        >
-                          {activeHover.label}{' '}
-                          {activeHover.point.value.toFixed(0)}{' '}
-                          {activeHover.unit}
-                        </text>
-                        <text
-                          x={activeHover.centerX}
-                          y={activeHover.topY + 28}
-                          className="chart-tooltip-sub"
-                        >
-                          {activeHover.point.timestamp}
-                        </text>
-                      </g>
-                    )}
-                  </svg>
-                </div>
-              ) : (
-                <p className="metrics">Nessun dato storico disponibile</p>
-              )}
-            </article>
-          )
-        })}
+                      <line
+                        x1={geometry.padding.left}
+                        y1={geometry.padding.top}
+                        x2={geometry.padding.left}
+                        y2={geometry.height - geometry.padding.bottom}
+                        className="chart-axis"
+                      />
+                      <line
+                        x1={geometry.padding.left}
+                        y1={geometry.height - geometry.padding.bottom}
+                        x2={geometry.width - geometry.padding.right}
+                        y2={geometry.height - geometry.padding.bottom}
+                        className="chart-axis"
+                      />
+                      <text
+                        x={geometry.padding.left - 10}
+                        y={geometry.padding.top + 4}
+                        className="chart-label axis-label"
+                      >
+                        {geometry.max.toFixed(0)} {metric.unit}
+                      </text>
+                      <text
+                        x={geometry.padding.left - 10}
+                        y={geometry.height - geometry.padding.bottom}
+                        className="chart-label axis-label"
+                      >
+                        {geometry.min.toFixed(0)} {metric.unit}
+                      </text>
+                      <path
+                        d={geometry.path}
+                        style={{ stroke: metric.color }}
+                        className="chart-line"
+                      />
+                      {geometry.points.map((point) => (
+                        <g key={`${metric.key}-${point.timestamp}`}>
+                          <circle
+                            cx={point.x}
+                            cy={point.y}
+                            r="4"
+                            style={{ fill: metric.color }}
+                            onMouseEnter={() =>
+                              setHover({
+                                metric: metric.key,
+                                point,
+                                unit: metric.unit,
+                                label: metric.label,
+                              })
+                            }
+                            onMouseLeave={() => setHover(null)}
+                          />
+                          <text
+                            x={point.x}
+                            y={geometry.height - geometry.padding.bottom + 16}
+                            className="chart-label"
+                          >
+                            {point.timestamp}
+                          </text>
+                        </g>
+                      ))}
+                      {activeHover && (
+                        <g className="chart-tooltip">
+                          <rect
+                            x={activeHover.centerX - TOOLTIP_WIDTH / 2}
+                            y={activeHover.topY}
+                            rx="6"
+                            ry="6"
+                            width={TOOLTIP_WIDTH}
+                            height={TOOLTIP_HEIGHT}
+                          />
+                          <text
+                            x={activeHover.centerX}
+                            y={activeHover.topY + 14}
+                            className="chart-tooltip-title"
+                          >
+                            {activeHover.label}{' '}
+                            {activeHover.point.value.toFixed(0)}{' '}
+                            {activeHover.unit}
+                          </text>
+                          <text
+                            x={activeHover.centerX}
+                            y={activeHover.topY + 28}
+                            className="chart-tooltip-sub"
+                          >
+                            {activeHover.point.timestamp}
+                          </text>
+                        </g>
+                      )}
+                    </svg>
+                  </div>
+                ) : (
+                  <p className="metrics">Nessun dato storico disponibile</p>
+                )}
+              </>
+            )
+          })()}
+        </article>
 
         <article className="card span-2 type-card">
           <h3>Tipo alimentazione sulla timeline</h3>
           {timeline.length ? (
             <div className="type-timeline">
               {timeline.map((point) => (
-                <div className="type-chip" key={`tipo-${point.timestamp}`}>
+                <div
+                  className="type-chip"
+                  key={`tipo-${point.timestamp}`}
+                  style={{
+                    borderBottomColor: getPowerColor(
+                      point.tipo_alimentazione || train.tipo_alimentazione,
+                    ),
+                  }}
+                >
                   <span>{point.timestamp}</span>
-                  <strong>{point.tipo_alimentazione || train.tipo_alimentazione}</strong>
+                  <strong>
+                    {point.tipo_alimentazione || train.tipo_alimentazione}
+                  </strong>
                 </div>
               ))}
             </div>

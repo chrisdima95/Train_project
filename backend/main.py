@@ -1,6 +1,8 @@
 from flask import Flask, jsonify
 from flask_cors import CORS
-from database import init_db, fetch_live_data, fetch_history, calcola_consumo_30min
+
+from database import init_db
+from query import calcola_consumo_30min, fetch_history, fetch_live_data
 
 ROUTE_SEGMENTS = [
     {'citta': 'Torino', 'km': 0, 'lat': 45.0703, 'lon': 7.6869},

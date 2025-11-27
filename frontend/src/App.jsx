@@ -138,6 +138,47 @@ export default function App() {
     }, {})
   }, [timeline])
 
+  const energyConsumptionChart = useMemo(() => {
+    if (!timeline.length) return null
+
+    const width = 280
+    const height = 130
+    const padding = { top: 12, right: 12, bottom: 20, left: 12 }
+    const recentPoints = timeline.slice(-6)
+    const values = recentPoints.map((point) => Number(point.energia_kwh) || 0)
+    const min = Math.min(...values)
+    const max = Math.max(...values)
+    const range = Math.max(max - min, 1)
+    const innerWidth = width - padding.left - padding.right
+    const innerHeight = height - padding.top - padding.bottom
+
+    const points = recentPoints.map((point, index) => {
+      const x =
+        padding.left +
+        (index / Math.max(values.length - 1, 1)) * innerWidth
+      const normalized = (values[index] - min) / range
+      const y = padding.top + (1 - normalized) * innerHeight
+      return {
+        x,
+        y,
+        timestamp: point.timestamp,
+        value: values[index],
+      }
+    })
+
+    return {
+      width,
+      height,
+      padding,
+      min,
+      max,
+      points,
+      path: points
+        .map((pt, idx) => `${idx === 0 ? 'M' : 'L'} ${pt.x} ${pt.y}`)
+        .join(' '),
+    }
+  }, [timeline])
+
   if (error && !train) {
     return <div className="loading">{error}</div>
   }
@@ -204,11 +245,41 @@ export default function App() {
           aria-label="Immagine del treno ad alta velocità con dati principali"
         >
           <div className="train-hero-content">
-            <div className="metric">
-                <span className="label">Consumo di energia (ultimi 30 minuti)</span>
-                <span className="number">{train.consumo_30min || 0}</span>
-                <span className="unit">kWh</span>
+            <div className="metric energy-highlight">
+              <span className="label">Consumo di energia (ultimi 30 minuti)</span>
+              <span className="number energy-number">{train.consumo_30min || 0}</span>
+              <span className="unit energy-unit">kWh</span>
+            </div>
+
+            {energyConsumptionChart && (
+              <div
+                className="energy-mini-chart"
+                aria-label="Andamento consumo di energia negli ultimi 30 minuti"
+              >
+                <svg
+                  viewBox={`0 0 ${energyConsumptionChart.width} ${energyConsumptionChart.height}`}
+                  role="img"
+                >
+                  <path
+                    d={energyConsumptionChart.path}
+                    className="energy-line"
+                  />
+                  {energyConsumptionChart.points.map((point) => (
+                    <g key={`energy-${point.timestamp}`}>
+                      <circle cx={point.x} cy={point.y} r="3" />
+                      <text
+                        x={point.x}
+                        y={energyConsumptionChart.height - 6}
+                        className="energy-label"
+                      >
+                        {point.timestamp}
+                      </text>
+                    </g>
+                  ))}
+                </svg>
               </div>
+            )}
+
             <div className="train-hero-metrics">
               <div className="metric">
                 <span className="label">Tipo alimentazione</span>
@@ -240,38 +311,44 @@ export default function App() {
             <ul className="metrics-list mass-notes-list">
               <li>
                 <span>Massa complessiva</span>
-                <strong>{train.massa} t</strong>
+                <strong className="metric-good">{train.massa} t</strong>
               </li>
               <li>
                 <span>Alimentazione</span>
-                <strong>{train.tipo_alimentazione}</strong>
+                <strong className="metric-good">{train.tipo_alimentazione}</strong>
               </li>
               <li>
                 <span>Stato</span>
-                <strong>{train.stato_operativo || '-'}</strong>
+                <strong className="metric-good">{train.stato_operativo || '-'}</strong>
               </li>
               </ul>
               <h5>Diagnostica</h5>
               <ul className="metrics-list mass-notes-list">
               <li>
                 <span>Freni</span>
-                <strong>{train.freni || '-'}</strong>
+                <strong className="metric-good">
+                  {train.freni || '-'}
+                </strong>
               </li>
               <li>
                 <span>Motori</span>
-                <strong>{train.motori || '-'}</strong>
+                <strong className="metric-good">
+                  {train.motori || '-'}
+                </strong>
               </li>
               {notes.map((item) => (
                 <li key={item.label}>
                   <span>{item.label}</span>
-                  <strong>{item.value}</strong>
+                  <strong className="metric-good">{item.value}</strong>
                 </li>
               ))}
             </ul>
           </div>
         </article>
+      </section>
 
-        <article className="card span-2 chart-card">
+      <section className="wide-sections">
+        <article className="card chart-card wide-card">
           <div className="chart-tabs">
             {CHART_METRICS.map((metric) => (
               <button
@@ -424,7 +501,7 @@ export default function App() {
           })()}
         </article>
 
-        <article className="card span-2 type-card">
+        <article className="card type-card wide-card">
           <h3>Tipo alimentazione sulla timeline</h3>
           {timeline.length ? (
             <div className="type-timeline">
@@ -450,7 +527,7 @@ export default function App() {
           )}
         </article>
 
-        <article className="card span-2 route-card">
+        <article className="card route-card wide-card">
           <h3>Percorso stilizzato</h3>
           <div className="route-line">
             {route.map((segment, index) => (

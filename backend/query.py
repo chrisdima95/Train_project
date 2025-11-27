@@ -1,7 +1,6 @@
 import sqlite3
-from pathlib import Path
 
-DB_PATH = Path(__file__).resolve().parent / 'treni.db'
+from database import DB_PATH
 
 
 def get_connection():
@@ -162,6 +161,103 @@ def filtra_per_orario(orario: str):
         print(f'Energia: {e} kWh')
         print(f'Massa: {m} t')
         print(f'Tipo alimentazione: {tipo}')
+
+
+def fetch_live_data():
+    """Recupera il record live come dict pronto per l'API."""
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM treno_live LIMIT 1')
+        row = cursor.fetchone()
+
+    if not row:
+        return None
+
+    keys = [
+        'id',
+        'velocita',
+        'potenza_kw',
+        'energia_kwh',
+        'massa',
+        'tipo_alimentazione',
+        'stato_operativo',
+        'freni',
+        'motori',
+        'tensione_motori',
+        'corrente_trazione',
+        'pressione',
+        'altre_metriche',
+    ]
+    return dict(zip(keys, row))
+
+
+def fetch_history():
+    """Restituisce la timeline ordinata per timestamp."""
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            '''
+            SELECT timestamp, velocita, potenza_kw, energia_kwh, massa, tipo_alimentazione,
+                   stato_operativo, freni, motori, tensione_motori, corrente_trazione, pressione
+            FROM treno_history
+            ORDER BY timestamp
+            '''
+        )
+        rows = cursor.fetchall()
+
+    return [
+        {
+            'timestamp': timestamp,
+            'velocita': velocita,
+            'potenza_kw': potenza_kw,
+            'energia_kwh': energia_kwh,
+            'massa': massa,
+            'tipo_alimentazione': tipo_alimentazione,
+            'stato_operativo': stato_operativo,
+            'freni': freni,
+            'motori': motori,
+            'tensione_motori': tensione_motori,
+            'corrente_trazione': corrente_trazione,
+            'pressione': pressione,
+        }
+        for (
+            timestamp,
+            velocita,
+            potenza_kw,
+            energia_kwh,
+            massa,
+            tipo_alimentazione,
+            stato_operativo,
+            freni,
+            motori,
+            tensione_motori,
+            corrente_trazione,
+            pressione,
+        ) in rows
+    ]
+
+
+def calcola_consumo_30min():
+    """Calcola il consumo di energia negli ultimi 30 minuti dalla timeline."""
+    with get_connection() as conn:
+        cursor = conn.cursor()
+
+        cursor.execute('SELECT energia_kwh FROM treno_live WHERE id = "ETR-1000"')
+        row = cursor.fetchone()
+        energia_attuale = row[0] if row else 0
+
+        cursor.execute(
+            '''
+            SELECT energia_kwh FROM treno_history
+            ORDER BY timestamp
+            LIMIT 1 OFFSET (SELECT MAX(0, COUNT(*) - 3) FROM treno_history)
+            '''
+        )
+        row = cursor.fetchone()
+        energia_30min_fa = row[0] if row else energia_attuale
+
+    consumo = max(0, energia_attuale - energia_30min_fa)
+    return round(consumo, 1)
 
 
 if __name__ == '__main__':

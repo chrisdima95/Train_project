@@ -311,11 +311,18 @@ h1 {
   font-family: "JetBrains Mono", Consolas, monospace;
   font-size: 14px;
   text-transform: capitalize;
+  gap: 12px;
+}
+
+.metrics-list li span {
+  margin-right: 14px;
+  line-height: 1.0;
 }
 
 .metrics-list li strong {
   font-size: 15px;
   color: #fefefe;
+  margin-left: auto;
 }
 
 .metrics-list li strong.metric-good {

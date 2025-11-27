@@ -1,5 +1,5 @@
 :root {
-  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
   background-color: #0c111d;
   color: #f2f6ff;
 }
@@ -56,11 +56,11 @@ h1 {
 }
 
 .card {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
+  background: rgba(20, 30, 48, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
   padding: 20px;
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(12px);
 }
 
 .span-2 {
@@ -74,9 +74,10 @@ h1 {
 }
 
 .value {
-  font-size: 32px;
+  font-size: 36px;
   font-weight: 700;
-  margin: 6px 0 0;
+  margin: 8px 0 0;
+  color: #ffffff;
 }
 
 .value span {
@@ -102,10 +103,10 @@ h1 {
 .train-hero-card {
   position: relative;
   overflow: hidden;
-  background-image: url('/treno.png');
+  background-image: url("/treno.jpg");
   background-size: cover;
   background-repeat: no-repeat;
-  background-position: center center;
+  background-position: 0%;
   display: flex;
   align-items: stretch;
   min-height: 360px;
@@ -181,9 +182,9 @@ h1 {
 .train-hero-metrics {
   position: absolute;
   z-index: 1;
-  left: 18px;
-  right: 18px;
-  bottom: 18px;
+  left: 0px;
+  right: 5px;
+  bottom: 5px;
   display: flex;
   gap: 16px;
   background: radial-gradient(
@@ -227,7 +228,7 @@ h1 {
 
 .metrics {
   margin-top: 12px;
-  font-family: 'JetBrains Mono', Consolas, monospace;
+  font-family: "JetBrains Mono", Consolas, monospace;
   font-size: 14px;
   line-height: 1.5;
 }
@@ -247,7 +248,7 @@ h1 {
   background: rgba(0, 0, 0, 0.2);
   border-radius: 10px;
   padding: 10px 14px;
-  font-family: 'JetBrains Mono', Consolas, monospace;
+  font-family: "JetBrains Mono", Consolas, monospace;
   font-size: 14px;
   text-transform: capitalize;
 }
@@ -427,11 +428,12 @@ h1 {
 }
 
 .mass-card {
-  width: 74%;
+  width: 70%;
   justify-self: end;
-  min-height: 360px; /* stessa altezza minima della sezione immagine */
+  min-height: 360px;
   display: flex;
   flex-direction: column;
+  background: rgba(25, 35, 52, 0.9);
 }
 
 @media (min-width: 800px) {
@@ -452,8 +454,8 @@ h1 {
 }
 
 .mass-notes-list {
-  max-height: 140px;
-  overflow-y: auto;
+  /* max-height: 140px; rimosso per visualizzazione completa */
+  /* overflow-y: auto; rimosso */
 }
 
 .mass-notes-block {
@@ -480,4 +482,3 @@ h1 {
     gap: 12px;
   }
 }
-

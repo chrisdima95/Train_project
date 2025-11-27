@@ -169,7 +169,6 @@ export default function App() {
           <p className="subtitle">Dashboard operativo</p>
           <h1>{train.id}</h1>
         </div>
-        <div className="status-pill">{train.tipo_alimentazione}</div>
       </header>
 
       <section className="grid">
@@ -205,73 +204,70 @@ export default function App() {
           aria-label="Immagine del treno ad alta velocità con dati principali"
         >
           <div className="train-hero-content">
-            <div className="train-speed-widget">
-              <svg
-                className="train-speed-ring"
-                viewBox="0 0 120 120"
-                aria-hidden="true"
-              >
-                <circle
-                  className="speed-ring-bg"
-                  cx="60"
-                  cy="60"
-                  r="44"
-                />
-                <circle
-                  className="speed-ring-fg"
-                  cx="60"
-                  cy="60"
-                  r="44"
-                  style={{
-                    strokeDasharray: 2 * Math.PI * 44,
-                    strokeDashoffset:
-                      ((100 - progress) / 100) * (2 * Math.PI * 44),
-                  }}
-                />
-              </svg>
-              <div className="train-speed-value">
-                <span className="label">Velocità</span>
-                <span className="number">{animatedValues.velocita}</span>
-                <span className="unit">km/h</span>
+            <div className="metric">
+                <span className="label">Consumo di energia (ultimi 30 minuti)</span>
+                <span className="number">{train.consumo_30min || 0}</span>
+                <span className="unit">kWh</span>
               </div>
-            </div>
-
             <div className="train-hero-metrics">
               <div className="metric">
-                <span className="label">Potenza</span>
-                <span className="number">{animatedValues.potenza_kw}</span>
-                <span className="unit">kW</span>
+                <span className="label">Tipo alimentazione</span>
+                <span className="number">{train.tipo_alimentazione || '-'}</span>
+                <span className="unit"></span>
               </div>
               <div className="metric">
-                <span className="label">Energia consumata</span>
-                <span className="number">{animatedValues.energia_kwh}</span>
-                <span className="unit">kWh</span>
+                <span className="label">Tensione motori</span>
+                <span className="number">{train.tensione_motori || 0}</span>
+                <span className="unit">V</span>
+              </div>
+              <div className="metric">
+                <span className="label">Corrente trazione</span>
+                <span className="number">{train.corrente_trazione || 0}</span>
+                <span className="unit">A</span>
+              </div>
+              <div className="metric">
+                <span className="label">Pressione</span>
+                <span className="number">{train.pressione || 0}</span>
+                <span className="unit">bar</span>
               </div>
             </div>
           </div>
         </article>
 
         <article className="card mass-card">
-          <h3>Massa complessiva</h3>
-          <p className="value">
-            {train.massa}
-            <span>t</span>
-          </p>
-
           <div className="mass-notes-block">
-            <h4 className="mass-notes-title">Note tecniche</h4>
-            {notes.length ? (
-              <ul className="metrics-list mass-notes-list">
-                {notes.map((item) => (
-                  <li key={item.label}>
-                    <span>{item.label}</span>
-                    <strong>{item.value}</strong>
-                  </li>
-                ))}
+            <h5>Dati treno</h5>
+            <ul className="metrics-list mass-notes-list">
+              <li>
+                <span>Massa complessiva</span>
+                <strong>{train.massa} t</strong>
+              </li>
+              <li>
+                <span>Alimentazione</span>
+                <strong>{train.tipo_alimentazione}</strong>
+              </li>
+              <li>
+                <span>Stato</span>
+                <strong>{train.stato_operativo || '-'}</strong>
+              </li>
               </ul>
-            ) : (
-              <p className="metrics">Nessuna nota disponibile</p>
-            )}
+              <h5>Diagnostica</h5>
+              <ul className="metrics-list mass-notes-list">
+              <li>
+                <span>Freni</span>
+                <strong>{train.freni || '-'}</strong>
+              </li>
+              <li>
+                <span>Motori</span>
+                <strong>{train.motori || '-'}</strong>
+              </li>
+              {notes.map((item) => (
+                <li key={item.label}>
+                  <span>{item.label}</span>
+                  <strong>{item.value}</strong>
+                </li>
+              ))}
+            </ul>
           </div>
         </article>
 

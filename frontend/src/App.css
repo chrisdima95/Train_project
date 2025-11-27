@@ -393,6 +393,11 @@ h1 {
   stroke-width: 1;
 }
 
+.chart-tooltip {
+  /* Questo evita di catturare altri eventi del mouse, evitando il flash delle info del grafico */
+  pointer-events: none;
+}
+
 .chart-tooltip-title {
   fill: #ffffff;
   font-size: 11px;
